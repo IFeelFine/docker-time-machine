@@ -1,0 +1,18 @@
+version: '3'
+services:
+  TimeMachine:
+    image: docker.io/ifeelfine/time-machine
+    restart: unless-stopped
+    environment:
+      - TUSER: tmuser
+      - TPASS: tmuser
+      - TSIZE: 1000000
+      - TZ: America/Toronto
+    networks:
+      - timemachine
+    ports:
+      - 445:445
+      - 5353:5353/udp
+    volumes:
+      - /opt/timemachine:/timemachine:Z
+      - /SSDVolume/docker/appdata/timemachine:/config:Z

@@ -1,0 +1,36 @@
+#!/usr/bin/with-contenv bash
+
+script=[$(basename "$0")]
+
+# Create config folders
+echo "$script Creating config folders..."
+mkdir -p \
+    /config/samba/private \
+    /config/avahi/services
+
+
+# Create default config files from /defaults directory
+echo "$script Create default config files..."
+shopt -s globstar nullglob
+for dir in /defaults/* ; do
+  for file in /defaults/${dir##*/}/*; do
+    if [[ -d /config/${dir##*/}/${file##*/} ]]; then
+      for sub in $file/*; do
+        if [[ ! -f /config/${dir##*/}/${file##*/}/${sub##*/} ]]; then
+          cp ${sub} /config/${dir##*/}/${file##*/}/${sub##*/} || (echo "$script --ERROR-- Could not copy file ${sub}"; exit 1)
+          echo "$script   - added ${dir##*/}/${file##*/}/${sub##*/}"
+        else
+          echo "$script --ERROR-- Too many subdirectories exist in /defaults/: contact support."; exit 1
+        fi
+      done
+    elif [[ ! -f /config/${dir##*/}/${file##*/} ]]; then
+      cp ${file} /config/${dir##*/}/${file##*/} || (echo "$script --ERROR-- Could not copy file $file"; exit 1)
+      echo "$script   - added ${dir##*/}/${file##*/}"
+    fi
+  done
+done
+
+# Make symkinks
+echo "$script Creating symlinks..."
+[[ ! -L /etc/avahi ]] && ln -sf /config/avahi /etc/avahi || echo "/etc/avahi is already a symlink"
+[[ ! -L /etc/samba ]] && ln -sf /config/samba /etc/samba || echo "/etc/samba is already a symlink"

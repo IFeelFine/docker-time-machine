@@ -1,0 +1,24 @@
+#!/usr/bin/with-contenv bash
+
+script=[$(basename "$0")]
+tmUser=${TUSER:-tmuser}
+tmPass=${TPASS:-tmpass}
+tmUID=${TUID:-1001}
+
+grep -q "^${tmUser}:" /etc/passwd \
+  || ((adduser -H -D -u ${tmUID} "${tmUser}" 
+      echo -e "${tmPass}\n${tmPass}" | smbpasswd -s -a "${tmUser}") >/dev/null \
+      && echo "$script Added user ${tmUser} to Samba")
+
+echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>GlobalQuota</key>
+    <integer>$((${TMSIZE:-512000} * 1000000))</integer>
+  </dict>
+</plist>' > /timemachine/.com.apple.TimeMachine.quota.plist && echo "$script Added quota file"
+
+[[ ${tmUser} != "tmuser" ]] && (sed -i "s/valid users = tmuser/valid users = ${tmUser}/" /etc/samba/smb.conf && echo "$script Modified smb.conf valid users")
+
+chown -R ${tmUser}: /timemachine && echo "$script Update /timemachine permissions"

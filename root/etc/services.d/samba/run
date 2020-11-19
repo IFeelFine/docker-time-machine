@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv bash
+
+/usr/sbin/smbd --foreground --log-stdout
+
